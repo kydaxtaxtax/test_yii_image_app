@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    ports:
+      - "5432:5432"
+    container_name: postgres
+    environment:
+      POSTGRES_DB: yii2db
+      POSTGRES_USER: yii2user
+      POSTGRES_PASSWORD: yii2pass
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - yii2-network
+
+  php-fpm:
+    build: .
+    container_name: yii2-php
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - yii2-network
+    depends_on:
+      - postgres
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    container_name: yii2-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - yii2-network
+    depends_on:
+      - php-fpm
+
+
+networks:
+  yii2-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
